@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz DRE - Professor Moreira</title>
+<style>
+:root{--azul:#082f49;--azul2:#0f4c81;--dourado:#facc15;--verde:#16a34a;--vermelho:#dc2626;--claro:#f8fafc;--cinza:#e5e7eb;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#082f49,#0f172a);color:#111;min-height:100vh}
+.app{max-width:520px;margin:0 auto;min-height:100vh;background:#f1f5f9;box-shadow:0 0 25px rgba(0,0,0,.35)}
+header{background:var(--azul);color:white;padding:18px 14px;text-align:center;border-bottom:5px solid var(--dourado)}
+header h1{font-size:20px;margin:0 0 5px;font-weight:900;letter-spacing:.3px}
+header p{margin:0;font-size:13px;color:#e0f2fe}
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+.card{background:white;border-radius:18px;padding:18px;box-shadow:0 8px 20px rgba(15,23,42,.13);border:1px solid #dbeafe}
+.start-title{font-size:24px;font-weight:900;color:var(--azul);text-align:center;margin:8px 0}
+.badge{display:inline-block;background:var(--dourado);color:#111827;font-weight:900;padding:7px 12px;border-radius:999px;font-size:12px;margin-bottom:10px}
+.input{width:100%;padding:14px;border:2px solid #cbd5e1;border-radius:12px;font-size:16px;margin:8px 0 12px}
+.btn{border:0;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:900;cursor:pointer;width:100%;margin:7px 0}
+.btn-primary{background:var(--azul2);color:white}
+.btn-yellow{background:var(--dourado);color:#111827}
+.btn-gray{background:#cbd5e1;color:#111827}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.progress{height:12px;background:#cbd5e1;border-radius:999px;overflow:hidden;margin:12px 0}
+.bar{height:100%;background:linear-gradient(90deg,var(--dourado),#22c55e);width:0%}
+.qtop{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+.qnum{font-weight:900;color:var(--azul)}
+.score{font-weight:900;color:#166534}
+.question{font-size:18px;line-height:1.42;font-weight:800;color:#111827;margin:12px 0}
+.opt{display:block;width:100%;text-align:left;background:#f8fafc;border:2px solid #cbd5e1;border-radius:14px;padding:13px;margin:9px 0;font-size:16px;line-height:1.35;cursor:pointer}
+.opt:hover{border-color:var(--azul2)}
+.opt.correct{background:#dcfce7;border-color:var(--verde)}
+.opt.wrong{background:#fee2e2;border-color:var(--vermelho)}
+.feedback{display:none;border-radius:14px;padding:14px;margin-top:12px;font-size:15px;line-height:1.45}
+.feedback.ok{display:block;background:#dcfce7;border:2px solid #22c55e}
+.feedback.no{display:block;background:#fee2e2;border:2px solid #ef4444}
+.comment{margin-top:8px}
+.footer{font-size:12px;text-align:center;color:#64748b;margin-top:14px}
+.result-big{font-size:42px;text-align:center;font-weight:900;color:var(--azul);margin:15px 0}
+.hidden{display:none!important}
+@media print{body{background:white}.app{box-shadow:none;max-width:none}.btn,.input{display:none}.screen{display:block}.screen:not(.active){display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<h1>CURSO DE CONTABILIDADE PROFESSOR MOREIRA</h1>
+<p>Quiz Mobile • Demonstração do Resultado do Exercício - DRE</p>
+</header>
+
+<section id="start" class="screen active">
+<div class="card">
+<div class="start-title">TREINAMENTO PESADO</div>
+<p><b>Assunto:</b> DRE - Demonstração do Resultado do Exercício</p>
+<p>30 questões teóricas inéditas no estilo FGV, com gabarito equilibrado entre A, B, C e D.</p>
+<input id="nome" class="input" placeholder="Digite seu nome" />
+<input id="whats" class="input" placeholder="Digite seu WhatsApp" />
+<button class="btn btn-primary" onclick="startQuiz()">Liberar Quiz</button>
+<button class="btn btn-yellow" onclick="continuar()">Continuar de onde parei</button>
+<p class="footer">WhatsApp: 61 98532-3574</p>
+</div>
+</section>
+
+<section id="quiz" class="screen">
+<div class="card">
+<div class="qtop">
+<span class="qnum" id="qnum"></span>
+<span class="score" id="score"></span>
+</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="badge" id="tema"></div>
+<div class="question" id="question"></div>
+<div id="options"></div>
+<div id="feedback" class="feedback"></div>
+<div class="btn-row">
+<button class="btn btn-gray" onclick="prevQ()">← Voltar</button>
+<button class="btn btn-primary" onclick="nextQ()">Avançar →</button>
+</div>
+<button class="btn btn-yellow" onclick="restart()">Reiniciar</button>
+</div>
+</section>
+
+<section id="result" class="screen">
+<div class="card">
+<div class="start-title">Resultado Final</div>
+<div class="result-big" id="finalScore"></div>
+<p id="finalMsg"></p>
+<button class="btn btn-primary" onclick="restart()">Refazer Quiz</button>
+<p class="footer">Curso de Contabilidade Professor Moreira</p>
+</div>
+</section>
+</div>
+
+<script>
+const qs=[
+{t:'Finalidade da DRE',q:'A Demonstração do Resultado do Exercício tem como finalidade principal evidenciar:',o:['a posição financeira da entidade em uma data específica.','as entradas e saídas de caixa do período.','as mutações ocorridas diretamente no patrimônio líquido.','o desempenho econômico da entidade em determinado período.'],a:3,c:'A DRE evidencia receitas, custos, despesas, ganhos e perdas, permitindo apurar o desempenho econômico do período.'},
+{t:'Regime de competência',q:'Na elaboração da DRE, as receitas e despesas devem ser reconhecidas, em regra:',o:['pelo regime de competência.','pelo regime de caixa.','somente quando houver recebimento ou pagamento.','apenas no encerramento do exercício social.'],a:0,c:'A DRE observa o regime de competência: reconhece receitas e despesas quando ocorrem, independentemente do caixa.'},
+{t:'Receita líquida',q:'Na estrutura tradicional da DRE, a receita líquida é obtida pela:',o:['dedução do custo das vendas da receita bruta.','adição das receitas financeiras à receita bruta.','dedução de devoluções, abatimentos e tributos incidentes sobre vendas da receita bruta.','dedução das despesas administrativas da receita bruta.'],a:2,c:'Receita líquida = receita bruta menos devoluções, abatimentos e tributos sobre vendas.'},
+{t:'Deduções da receita',q:'Assinale a alternativa que apresenta item classificado como dedução da receita bruta.',o:['Despesa com propaganda.','Despesa com juros de empréstimos.','Salário da diretoria administrativa.','ICMS incidente sobre vendas.'],a:3,c:'Tributos incidentes sobre vendas, como ICMS, ISS, PIS e COFINS, são deduções da receita bruta.'},
+{t:'Lucro bruto',q:'O lucro bruto é apurado mediante:',o:['dedução do custo das vendas da receita líquida.','dedução das despesas financeiras da receita bruta.','dedução do IRPJ e da CSLL do resultado antes dos tributos.','adição das receitas financeiras ao resultado operacional.'],a:0,c:'Lucro bruto = receita líquida menos custo das mercadorias, produtos ou serviços vendidos.'},
+{t:'Despesas com vendas',q:'Comissões pagas a vendedores, quando relacionadas à comercialização dos produtos, devem ser classificadas como:',o:['despesas administrativas.','despesas com vendas.','deduções da receita bruta.','despesas financeiras.'],a:1,c:'Comissões de vendedores estão diretamente ligadas ao esforço de venda, portanto são despesas com vendas.'},
+{t:'Despesas administrativas',q:'O aluguel do escritório da administração geral da entidade deve ser apresentado na DRE como:',o:['custo dos produtos vendidos.','dedução da receita bruta.','despesa administrativa.','despesa financeira.'],a:2,c:'Gastos da estrutura administrativa são despesas administrativas.'},
+{t:'Receitas financeiras',q:'Os juros ativos decorrentes de aplicações financeiras devem ser classificados na DRE como:',o:['receita bruta de vendas.','dedução da receita.','outra receita operacional.','receita financeira.'],a:3,c:'Juros de aplicações financeiras representam receita financeira, e não receita da atividade principal.'},
+{t:'Despesas financeiras',q:'Os juros passivos incidentes sobre empréstimos bancários representam:',o:['despesa financeira.','despesa com vendas.','dedução da receita bruta.','custo das mercadorias vendidas.'],a:0,c:'Juros sobre empréstimos decorrem do custo do capital de terceiros e são despesas financeiras.'},
+{t:'Outras receitas',q:'O ganho obtido na venda de um veículo utilizado pela administração deve ser evidenciado, em regra, como:',o:['receita bruta de vendas.','outra receita.','dedução da receita.','custo de venda.'],a:1,c:'Ganho na venda de imobilizado é outra receita, pois não decorre da venda normal de mercadorias ou serviços.'},
+{t:'Outras despesas',q:'A perda na venda de máquina classificada no ativo imobilizado deve ser apresentada, em regra, como:',o:['dedução da receita bruta.','despesa financeira.','outra despesa.','custo da mercadoria vendida.'],a:2,c:'Perdas na baixa ou venda de imobilizado são tratadas como outras despesas.'},
+{t:'Resultado antes dos tributos',q:'Na DRE, o resultado antes do IRPJ e da CSLL é apurado:',o:['antes da dedução do custo das vendas.','imediatamente após a receita bruta.','somente após as participações estatutárias.','após o resultado operacional e financeiro, antes dos tributos sobre o lucro.'],a:3,c:'O resultado antes dos tributos antecede a dedução do IRPJ e da CSLL.'},
+{t:'IRPJ e CSLL',q:'O IRPJ e a CSLL incidentes sobre o lucro são apresentados na DRE:',o:['após o resultado antes dos tributos.','como deduções da receita bruta.','como custo dos produtos vendidos.','antes da apuração do lucro bruto.'],a:0,c:'IRPJ e CSLL são tributos sobre o lucro e aparecem após o resultado antes dos tributos.'},
+{t:'Lucro líquido',q:'O lucro líquido do exercício corresponde ao resultado:',o:['apurado antes das despesas financeiras.','final da DRE, após tributos sobre o lucro e participações, quando aplicáveis.','obtido logo após a receita líquida.','apurado antes do custo das vendas.'],a:1,c:'O lucro líquido é a última linha da DRE, depois dos tributos e das participações aplicáveis.'},
+{t:'CPC 26',q:'O CPC 26 trata, entre outros aspectos, da:',o:['mensuração dos estoques.','redução ao valor recuperável de ativos.','apresentação das demonstrações contábeis.','contabilização exclusiva de instrumentos financeiros.'],a:2,c:'O CPC 26 disciplina a apresentação das demonstrações contábeis, inclusive a demonstração do resultado.'},
+{t:'Lei 6.404/76',q:'Segundo a lógica da Lei nº 6.404/76, a DRE deve evidenciar receitas e despesas de forma a permitir a apuração:',o:['do saldo de caixa ao final do exercício.','do total de bens e direitos da entidade.','da composição do ativo circulante.','do resultado líquido do exercício.'],a:3,c:'A DRE é estruturada para demonstrar a formação do resultado líquido do exercício.'},
+{t:'Receita bruta',q:'A receita bruta de vendas representa:',o:['o valor das vendas antes das deduções.','o lucro após dedução do custo das vendas.','o resultado após receitas e despesas financeiras.','o lucro depois do IRPJ e da CSLL.'],a:0,c:'Receita bruta é o valor total das vendas ou serviços antes de devoluções, abatimentos e tributos incidentes.'},
+{t:'Devoluções',q:'As devoluções de vendas realizadas por clientes devem ser tratadas na DRE como:',o:['despesas financeiras.','deduções da receita bruta.','custo das mercadorias vendidas.','despesas administrativas.'],a:1,c:'Devoluções reduzem a receita bruta para apuração da receita líquida.'},
+{t:'Abatimentos',q:'Os abatimentos concedidos sobre vendas, quando vinculados à operação de venda, são classificados como:',o:['despesas com vendas.','despesas administrativas.','deduções da receita bruta.','receitas financeiras negativas.'],a:2,c:'Abatimentos sobre vendas são deduções da receita bruta.'},
+{t:'Ordem da DRE',q:'Assinale a sequência que melhor representa a ordem lógica da DRE.',o:['Receita líquida, receita bruta, lucro bruto e lucro líquido.','Lucro bruto, receita bruta, despesas financeiras e lucro líquido.','Despesas administrativas, receita bruta, custo das vendas e lucro bruto.','Receita bruta, deduções, receita líquida, custo das vendas, lucro bruto, despesas, tributos e lucro líquido.'],a:3,c:'A DRE segue a ordem de formação do resultado, começando pela receita bruta e finalizando no lucro líquido.'},
+{t:'Custos x despesas',q:'Na DRE, os custos diferem das despesas porque os custos:',o:['estão ligados aos bens ou serviços vendidos.','são sempre despesas financeiras.','são sempre deduções da receita bruta.','não influenciam o resultado do período.'],a:0,c:'Custos estão relacionados à aquisição, produção ou prestação dos bens e serviços vendidos.'},
+{t:'Propaganda',q:'Despesas com propaganda e publicidade voltadas à comercialização dos produtos devem ser classificadas como:',o:['despesas administrativas.','despesas com vendas.','deduções da receita bruta.','despesas financeiras.'],a:1,c:'Propaganda voltada à venda dos produtos é despesa com vendas.'},
+{t:'CSP',q:'Em uma empresa prestadora de serviços, o custo diretamente relacionado aos serviços prestados deve ser apresentado como:',o:['despesa administrativa.','despesa financeira.','custo dos serviços prestados.','dedução da receita bruta.'],a:2,c:'Em prestadoras de serviços, o custo correspondente é o Custo dos Serviços Prestados - CSP.'},
+{t:'DRE e Balanço',q:'Assinale a alternativa correta sobre a diferença entre DRE e Balanço Patrimonial.',o:['A DRE evidencia apenas bens e direitos; o Balanço evidencia receitas e despesas.','Ambas as demonstrações evidenciam exclusivamente contas patrimoniais.','A DRE evidencia posição patrimonial; o Balanço evidencia desempenho econômico.','A DRE evidencia desempenho em período; o Balanço evidencia posição patrimonial em data específica.'],a:3,c:'A DRE é dinâmica e mostra o resultado do período. O Balanço é estático e mostra a posição patrimonial em determinada data.'},
+{t:'Resultado financeiro líquido',q:'O resultado financeiro líquido é obtido pela:',o:['diferença entre receitas financeiras e despesas financeiras.','diferença entre receita líquida e custo das vendas.','soma da receita bruta com o lucro bruto.','dedução do IRPJ da receita bruta.'],a:0,c:'Resultado financeiro líquido = receitas financeiras menos despesas financeiras.'},
+{t:'Participações',q:'As participações estatutárias, quando aplicáveis, são evidenciadas na DRE:',o:['antes da receita bruta.','na apuração final do resultado, antes do lucro líquido.','como dedução da receita bruta.','como custo dos produtos vendidos.'],a:1,c:'As participações são deduzidas na parte final da DRE, antes da apuração do lucro líquido.'},
+{t:'Operações descontinuadas',q:'O resultado de operações descontinuadas, quando existente, deve ser evidenciado:',o:['como dedução da receita bruta.','dentro do custo das mercadorias vendidas.','de forma destacada, conforme a apresentação aplicável.','sempre como despesa financeira.'],a:2,c:'Resultados de operações descontinuadas devem ser apresentados de forma destacada, quando aplicável.'},
+{t:'Pegadinha FGV',q:'Uma entidade reconheceu receita de serviços e receita de juros de aplicações financeiras. Na DRE, a receita de juros deve ser apresentada:',o:['como receita bruta da prestação de serviços.','como dedução da receita bruta.','como custo dos serviços prestados.','como receita financeira.'],a:3,c:'A receita de juros não integra a receita bruta de serviços; deve ser apresentada como receita financeira.'},
+{t:'Conta de resultado',q:'Assinale a alternativa que contém apenas contas típicas da DRE.',o:['Receita de vendas, CMV e despesa administrativa.','Caixa, bancos e estoques.','Clientes, fornecedores e capital social.','Máquinas, imóveis e veículos.'],a:0,c:'Receitas, custos e despesas são contas de resultado e compõem a DRE.'},
+{t:'Questão integradora',q:'Considerando a estrutura da DRE, assinale a afirmativa correta.',o:['O lucro bruto é apurado depois do IRPJ e da CSLL.','A receita líquida é base para apuração do lucro bruto.','As despesas financeiras são deduções da receita bruta.','O custo das vendas é apresentado após o lucro líquido.'],a:1,c:'A receita líquida é o ponto de partida para dedução do custo das vendas e apuração do lucro bruto.'}
+];
+
+let cur=0,answers=Array(qs.length).fill(null),started=false;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz(){
+  const n=document.getElementById('nome').value.trim();
+  const w=document.getElementById('whats').value.trim();
+  if(!n||!w){
+    alert('Preencha Nome e WhatsApp para liberar o quiz.');
+    return;
+  }
+  localStorage.setItem('pm_dre_nome',n);
+  localStorage.setItem('pm_dre_whats',w);
+  started=true;
+  cur=0;
+  save();
+  render();
+  show('quiz');
+}
+
+function continuar(){
+  const saved=localStorage.getItem('pm_dre_state');
+  if(saved){
+    const st=JSON.parse(saved);
+    cur=st.cur||0;
+    answers=st.answers||answers;
+    started=true;
+    render();
+    show('quiz');
+  }else{
+    alert('Nenhum progresso encontrado.');
+  }
+}
+
+function save(){
+  localStorage.setItem('pm_dre_state',JSON.stringify({cur,answers}));
+}
+
+function render(){
+  const x=qs[cur];
+  document.getElementById('qnum').textContent=`Questão ${cur+1}/30`;
+  document.getElementById('tema').textContent=x.t;
+  document.getElementById('question').textContent=x.q;
+  document.getElementById('score').textContent=`Acertos: ${answers.filter((v,i)=>v===qs[i].a).length}`;
+  document.getElementById('bar').style.width=((cur+1)/qs.length*100)+'%';
+
+  const opts=document.getElementById('options');
+  opts.innerHTML='';
+
+  x.o.forEach((op,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML=`<b>(${String.fromCharCode(65+i)})</b> ${op}`;
+    b.onclick=()=>answer(i);
+
+    if(answers[cur]!==null){
+      if(i===x.a)b.classList.add('correct');
+      if(i===answers[cur]&&i!==x.a)b.classList.add('wrong');
+    }
+
+    opts.appendChild(b);
+  });
+
+  const fb=document.getElementById('feedback');
+
+  if(answers[cur]===null){
+    fb.className='feedback';
+    fb.innerHTML='';
+  }else{
+    const ok=answers[cur]===x.a;
+    fb.className='feedback '+(ok?'ok':'no');
+    fb.innerHTML=`<b>${ok?'Correto!':'Atenção!'}</b> Gabarito: ${String.fromCharCode(65+x.a)}.<div class="comment">${x.c}</div>`;
+  }
+
+  save();
+}
+
+function answer(i){
+  if(answers[cur]===null){
+    answers[cur]=i;
+    render();
+  }
+}
+
+function nextQ(){
+  if(cur<qs.length-1){
+    cur++;
+    render();
+  }else{
+    finish();
+  }
+}
+
+function prevQ(){
+  if(cur>0){
+    cur--;
+    render();
+  }
+}
+
+function finish(){
+  const ac=answers.filter((v,i)=>v===qs[i].a).length;
+  document.getElementById('finalScore').textContent=`${ac}/30`;
+  document.getElementById('finalMsg').innerHTML= ac>=24
+    ? 'Excelente desempenho! Continue revisando as pegadinhas da DRE.'
+    : ac>=18
+    ? 'Bom desempenho. Revise deduções, resultado financeiro e ordem da DRE.'
+    : 'Reforce a teoria da DRE e refaça o quiz até dominar.';
+  show('result');
+}
+
+function restart(){
+  if(confirm('Deseja reiniciar o quiz?')){
+    cur=0;
+    answers=Array(qs.length).fill(null);
+    save();
+    render();
+    show('quiz');
+  }
+}
+</script>
+</body>
+</html>
